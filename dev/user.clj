@@ -30,6 +30,28 @@
                        Void notmuch_tags_destroy
                        ])
 
+(ns-comfort 'nm
+            (fn [s] (-> s
+                        (str/replace #"_" "-")
+                        (str/replace-first #"notmuch-" "")))
+            {"database-" 'nm-db
+             "message-" 'nm-msg
+             "tags-" 'nm-t
+             "query-" 'nm-q})
+
+(defn ns-comfort [nmsp common-fn pref->ns-sym]
+  (do
+    (doseq [s (vals pref->ns-sym)]
+      (remove-ns s)
+      (create-ns s))
+    (doseq [[raw-s v] (ns-interns nmsp)]
+      (let [s (common-fn (str raw-s))
+            pref (some #(re-find (re-pattern %) s) (keys pref->ns-sym))
+            new-sym (symbol (str/replace-first s (re-pattern pref) ""))]
+        (intern (pref->ns-sym pref) new-sym v)))
+    (for [s (vals pref->ns-sym)]
+      [s (ns-interns s)])))
+
 (def mode {:read-only 0})
 
 (defn tags-from-msg [msg]

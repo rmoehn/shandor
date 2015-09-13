@@ -46,9 +46,9 @@
             (fn [s] (-> s
                         (str/replace #"_" "-")
                         (str/replace-first #"notmuch-" "")))
-            {"database-" 'nm-db
-             "message-" 'nm-msg
-             "messages-" 'nm-msgs
-             "tags-" 'nm-t
-             "query-" 'nm-query})
+            {"database-" 'nm.db
+             "message-" 'nm.msg
+             "messages-" 'nm.msgs
+             "tags-" 'nm.t
+             "query-" 'nm.query})
 

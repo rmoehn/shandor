@@ -39,7 +39,7 @@
 
 #_(defn add-tags! [msg tags]
   (doseq [tag tags]
-    (nm-msg/add-tag msg tag)))
+    (nm.msg/add-tag msg tag)))
 
 (defn add-tags! [msg tags]
   (println "Would add " tags))
@@ -112,16 +112,16 @@
       (add-tags! msg (map->tags nt)))))
 
 (defn treat-messages [query db]
-  (let [query-obj (nm-query/create db query)
-        msgs-obj (nm-query/search-messages query-obj)]
+  (let [query-obj (nm.query/create db query)
+        msgs-obj (nm.query/search-messages query-obj)]
     (loop []
-      (when (nm-msgs/valid msgs-obj)
-        (let [msg (nm-msgs/get msgs-obj)]
-          (println (nm-msg/get-header msg "Subject"))
+      (when (nm.msgs/valid msgs-obj)
+        (let [msg (nm.msgs/get msgs-obj)]
+          (println (nm.msg/get-header msg "Subject"))
           (treat-message msg))
-        (nm-msgs/move-to-next msgs-obj)
+        (nm.msgs/move-to-next msgs-obj)
         (recur)))
-    (nm-query/destroy query-obj)))
+    (nm.query/destroy query-obj)))
 
 (comment
 

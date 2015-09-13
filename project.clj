@@ -1,8 +1,8 @@
 (defproject shandor "0.1.0-SNAPSHOT"
-  :description "TODO"
-  :url "TODO"
-  :license {:name "TODO: Choose a license"
-            :url "http://choosealicense.com/"}
+  :description "Gives your emails a shelf life and deletes them when they're expired."
+  :url "https://github.com/rmoehn/shandor"
+  :license {:name "MIT License"
+            :url "http://opensource.org/licenses/MIT"}
 
   :source-paths ["src/clj"]
   :java-source-paths ["src/java"]

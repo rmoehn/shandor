@@ -9,7 +9,8 @@
             [clojure.tools.namespace.repl :refer [refresh refresh-all]]
             [clojure.instant :as inst]
             [joda-time :as jt]
-            [shandor.notmuch]))
+            [shandor.notmuch])
+  (:import [com.sun.jna.ptr PointerByReference]))
 
 ;;; Note: We won't be threadsafe, although notmuch enables thread-safety.
 

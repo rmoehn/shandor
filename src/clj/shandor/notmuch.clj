@@ -1,8 +1,11 @@
 (ns shandor.notmuch
-  (:require [clojure.string :as str]
-            [net.n01se.clojure-jna :as jna])
+  (:require [clojure
+             [set :as set]
+             [string :as str]]
+            [net.n01se.clojure-jna :as jna]
+            [plumbing.core :as plumbing])
   (:import [com.sun.jna.ptr PointerByReference]
-           [com.sun.jna Pointer]))
+           [com.sun.jna NativeLibrary Pointer]))
 
 ;;;; Function for making namespace provided by clojure-jna easier to use
 
@@ -26,6 +29,8 @@
                        String notmuch_database_get_path,
                        Integer notmuch_database_get_version,
                        Integer notmuch_database_find_message,
+                       Integer notmuch_database_remove_message
+                       Integer notmuch_database_upgrade
                        String notmuch_message_get_filename,
                        Pointer notmuch_message_get_filenames,
                        String notmuch_message_get_header,
@@ -57,3 +62,7 @@
              "tags-" 'nm.tags
              "query-" 'nm.query})
 
+;; TODO: Figure out how we can get the value from the enum. This looks
+;;       interesting: http://technofovea.com/blog/archives/815 (RM 2015-09-13)
+(def status-for-int {0 :success
+                     6 :duplicate-message-id})

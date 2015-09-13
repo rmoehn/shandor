@@ -12,6 +12,7 @@
                  [net.n01se/clojure-jna "1.0.0"]
                  [clojure.joda-time "0.2.0"]
                  [org.clojure/core.match "0.3.0-alpha4"]
-                 [org.clojure/core.logic "0.8.10"]]
+                 [org.clojure/core.logic "0.8.10"]
+                 [prismatic/plumbing "0.5.0"]]
   :profiles {:dev {:dependencies [[org.clojure/tools.namespace "0.2.7"]]
                    :source-paths ["dev"]}})

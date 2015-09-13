@@ -9,6 +9,7 @@
             [clojure.tools.namespace.repl :refer [refresh refresh-all]]
             [clojure.instant :as inst]
             [joda-time :as jt]
+            [plumbing.fnk.schema :refer [assert-iae]]
             [shandor.notmuch])
   (:import [com.sun.jna.ptr PointerByReference]))
 
@@ -51,15 +52,15 @@
                                        nm.filenames/get
                                        nm.filenames/move-to-next))
 
-#_(defn add-tags! [msg tags]
+(defn add-tags! [msg tags]
   (doseq [tag tags]
     (nm.msg/add-tag msg tag)))
 
-(defn add-tags! [msg tags]
-  (println "Would add " tags))
-
+;; Removing from the database doesn't work for some reason. Therefore we rely on
+;; notmuch new to delete the entries for messages deleted from disk.
 (defn remove-message! [msg]
-  (println "Would remove msg" msg))
+  (doseq [fnm (get-filenames msg)]
+    (io/delete-file (io/file fnm))))
 
 ;;;; Mapping back and forth between tags and maps
 
@@ -70,7 +71,7 @@
 
 (defn tag->map [t]
   (cond-let
-    [[_ cmd date] (re-matches #"(REM|DEL)_(.*)" t)]
+    [[_ cmd date] (re-matches #"(REM|EXP)_(.*)" t)]
     [(keyword (str/lower-case cmd)) (jt/local-date date)]
 
     [[_ cnt unit] (re-matches #"(\d+)(\w)" t)]
@@ -113,13 +114,15 @@
      :rem (jt/plus today (jt/weeks 2))}
 
     :else
-    []))
+    {}))
 
 ;;;; Going through all messages and doing what needs to be done
 
 (defn treat-message [msg]
   (let [tags (tags->map (get-tags msg))
         nt (new-tags-map (jt/local-date) tags)]
+    (when (or (keyword? nt) (seq nt))
+      (println (nm.msg/get-header msg "Subject") tags nt))
     (if (= nt :remove)
       (remove-message! msg)
       (add-tags! msg (map->tags nt)))))
@@ -130,7 +133,6 @@
     (loop []
       (when (nm.msgs/valid msgs-obj)
         (let [msg (nm.msgs/get msgs-obj)]
-          (println (nm.msg/get-header msg "Subject"))
           (treat-message msg))
         (nm.msgs/move-to-next msgs-obj)
         (recur)))
@@ -143,8 +145,10 @@
   (def db-pointer (PointerByReference.))
   (nm/notmuch_database_open "/home/erle/mail" (mode :read-write) db-pointer)
   (def db (.getValue db-pointer))
-  (treat-messages "" db)
+  (treat-messages "*" db)
   (nm/notmuch_database_close (.getValue db-pointer))
+
+  (nm.db/upgrade db nil nil)
 
   (def msg-pointer (PointerByReference.))
   (nm/notmuch_database_find_message db "20150305075606.GB2120@localhost.zedat.fu-berlin.de" msg-pointer)

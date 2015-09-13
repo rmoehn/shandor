@@ -28,15 +28,28 @@
 (def mode {:read-only 0
            :read-write 1})
 
-(defn get-tags [msg]
-  (let [tags-obj (nm/notmuch_message_get_tags msg)
-        res (loop [tags-vec []]
-              (if-some [tag (nm/notmuch_tags_get tags-obj)]
-                       (do (nm/notmuch_tags_move_to_next tags-obj)
-                         (recur (conj tags-vec tag)))
-                       tags-vec))]
-    (nm/notmuch_tags_destroy tags-obj)
-    res))
+(defn iterator-converter
+  [get-iterator destroy-iterator get-item move-iterator]
+  (fn iterator-converter-fn [obj]
+   (let [iterator (get-iterator obj)
+         res (loop [items-vec []]
+               (if-some [item (get-item iterator)]
+                 (do
+                   (move-iterator iterator)
+                   (recur (conj items-vec item)))
+                 items-vec))]
+     (destroy-iterator iterator)
+     res)))
+
+(def get-tags (iterator-converter nm.msg/get-tags
+                                  nm.tags/destroy
+                                  nm.tags/get
+                                  nm.tags/move-to-next))
+
+(def get-filenames (iterator-converter nm.msg/get-filenames
+                                       nm.filenames/destroy
+                                       nm.filenames/get
+                                       nm.filenames/move-to-next))
 
 #_(defn add-tags! [msg tags]
   (doseq [tag tags]

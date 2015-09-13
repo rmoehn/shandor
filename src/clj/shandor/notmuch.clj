@@ -27,6 +27,7 @@
                        Integer notmuch_database_get_version,
                        Integer notmuch_database_find_message,
                        String notmuch_message_get_filename,
+                       Pointer notmuch_message_get_filenames,
                        String notmuch_message_get_header,
                        Pointer notmuch_message_get_tags,
                        Integer notmuch_message_add_tag,
@@ -40,6 +41,9 @@
                        Boolean notmuch_messages_valid
                        Pointer notmuch_messages_get
                        Void notmuch_messages_move_to_next
+                       String notmuch_filenames_get
+                       Void notmuch_filenames_move_to_next
+                       Void notmuch_filenames_destroy
                        ])
 
 (ns-comfort 'nm
@@ -47,8 +51,9 @@
                         (str/replace #"_" "-")
                         (str/replace-first #"notmuch-" "")))
             {"database-" 'nm.db
+             "filenames-" 'nm.filenames
              "message-" 'nm.msg
              "messages-" 'nm.msgs
-             "tags-" 'nm.t
+             "tags-" 'nm.tags
              "query-" 'nm.query})
 

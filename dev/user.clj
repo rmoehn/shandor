@@ -96,31 +96,30 @@
 
 ;;;; Rules for generating new tags map from tags map
 
-(defn new-tags-map [tags]
-  (let [today (jt/local-date)]
-    (cond
-      (and (contains? tags :deleted) (not (contains? tags :rem)))
-      {:rem (jt/plus today (jt/weeks 2))}
+(defn new-tags-map [today tags]
+  (cond
+    (and (contains? tags :deleted) (not (contains? tags :rem)))
+    {:rem (jt/plus today (jt/weeks 2))}
 
-      (and (contains? tags :rem) (jt/before? (tags :rem) today))
-      :remove
+    (and (contains? tags :rem) (jt/before? (tags :rem) today))
+    :remove
 
-      (and (contains? tags :ttl) (not (contains? tags :exp)))
-      {:exp (jt/plus today (tags :ttl))}
+    (and (contains? tags :ttl) (not (contains? tags :exp)))
+    {:exp (jt/plus today (tags :ttl))}
 
-      (and (not (contains? tags :deleted))
-           (contains? tags :exp) (jt/before? (tags :exp) today))
-      {:deleted :deleted
-       :rem (jt/plus today (jt/weeks 2))}
+    (and (not (contains? tags :deleted))
+         (contains? tags :exp) (jt/before? (tags :exp) today))
+    {:deleted :deleted
+     :rem (jt/plus today (jt/weeks 2))}
 
-      :else
-      [])))
+    :else
+    []))
 
 ;;;; Going through all messages and doing what needs to be done
 
 (defn treat-message [msg]
   (let [tags (tags->map (get-tags msg))
-        nt (new-tags-map tags)]
+        nt (new-tags-map (jt/local-date) tags)]
     (if (= nt :remove)
       (remove-message! msg)
       (add-tags! msg (map->tags nt)))))

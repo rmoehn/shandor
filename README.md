@@ -1,9 +1,6 @@
 # Shandor
 
-[<img alt="Sandor Katz Monticello 12 Sep 2015.jpg"
-      src="https://upload.wikimedia.org/wikipedia/commons/f/ff/Sandor_Katz_Monticello_12_Sep_2015.jpg"
-      height="240"
-      width="177">](https://commons.wikimedia.org/wiki/File:Sandor_Katz_Monticello_12_Sep_2015.jpg#/media/File:Sandor_Katz_Monticello_12_Sep_2015.jpg)
+[![Sandor Katz Monticello 12 Sep 2015.jpg](https://upload.wikimedia.org/wikipedia/commons/thumb/f/ff/Sandor_Katz_Monticello_12_Sep_2015.jpg/177px-Sandor_Katz_Monticello_12_Sep_2015.jpg)](https://commons.wikimedia.org/wiki/File:Sandor_Katz_Monticello_12_Sep_2015.jpg#/media/File:Sandor_Katz_Monticello_12_Sep_2015.jpg)
 
 Gives emails a shelf life and deletes them when they're expired.
 

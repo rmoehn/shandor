@@ -36,15 +36,27 @@
      (destroy-iterator iterator)
      res)))
 
-(def get-tags (iterator-converter nm.msg/get-tags
-                                  nm.tags/destroy
-                                  nm.tags/get
-                                  nm.tags/move-to-next))
+;; Note: This and the following are a bit silly, but because of AOT compilation,
+;;       a simple (def get-tags (iterator-convert …)) doesn't work. I don't
+;;       understand fully, why this is the case. Especially not, why
+;;       clojure.jna/to-ns works, but shandor.notmuch/ns-comfort doesn't. Yes,
+;;       the former is a macro and the latter a fn. But the work done at compile
+;;       time and at runtime is the same, as far as I see it. Anyway, this isn't
+;;       important enough to investigate deeply.
+;; TODO: Correct the problem the above Note describes. (RM 2015-09-15)
+(defn get-tags [msg]
+  ((iterator-converter nm.msg/get-tags
+                       nm.tags/destroy
+                       nm.tags/get
+                       nm.tags/move-to-next)
+   msg))
 
-(def get-filenames (iterator-converter nm.msg/get-filenames
-                                       nm.filenames/destroy
-                                       nm.filenames/get
-                                       nm.filenames/move-to-next))
+(defn get-filenames [msg]
+  ((iterator-converter nm.msg/get-filenames
+                      nm.filenames/destroy
+                      nm.filenames/get
+                      nm.filenames/move-to-next)
+   msg))
 
 (defn add-tags! [msg tags]
   (doseq [tag tags]

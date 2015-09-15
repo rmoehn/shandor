@@ -152,9 +152,8 @@
 
 (defn -main [& [db-path]]
   (let [db-pointer (PointerByReference.)
-        _ (nm/notmuch_database_open db-path
-                                    (mode :read-write)
-                                    db-pointer)
+        _ (nm.db/open db-path (mode :read-write) db-pointer)
         db (.getValue db-pointer)]
     (treat-messages "*" db)
-    (nm/notmuch_database_close (.getValue db-pointer))))
+    (nm.db/close (.getValue db-pointer))
+    (println "Finished.")))

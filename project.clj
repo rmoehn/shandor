@@ -16,4 +16,7 @@
   :profiles {:dev {:dependencies [[org.clojure/tools.namespace "0.2.7"]]
                    :source-paths ["dev"]}
              :uberjar {:main shandor.core
-                       :aot :all}})
+                       :aot :all}}
+
+  :jar-name "shandor-%s-slim.jar"
+  :uberjar-name "shandor-%s.jar")

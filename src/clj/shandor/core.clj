@@ -64,6 +64,7 @@
 
 ;; Removing from the database doesn't work for some reason. Therefore we rely on
 ;; notmuch new to delete the entries for messages deleted from disk.
+;; TODO: Figure out what is wrong with removing. (RM 2015-09-15)
 (defn remove-message! [msg]
   (doseq [fnm (get-filenames msg)]
     (io/delete-file (io/file fnm))))
@@ -144,7 +145,7 @@
           (treat-message msg))
         (nm.msgs/move-to-next msgs-obj)
         (recur)))
-    (nm.query/destroy query-obj)))
+    (nm.query/destroy query-obj))) ; Also destroys msgs-obj.
 
 
 ;;;; Entry point

@@ -7,7 +7,7 @@
   :source-paths ["src/clj"]
   :javac-options ["-target" "1.8" "-source" "1.8"]
   :dependencies [[org.clojure/clojure "1.7.0"]
-                 [net.java.dev.jna/jna "4.1.0"]
+                 [net.java.dev.jna/jna "4.0.0"]
                  [net.n01se/clojure-jna "1.0.0"]
                  [clojure.joda-time "0.2.0"]
                  [org.clojure/core.match "0.3.0-alpha4"]

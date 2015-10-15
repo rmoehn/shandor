@@ -82,6 +82,14 @@ wanting to do useful Clojure programming, but don't know what to do, feel free
 to take these and make them better and publish/contribute them.
 
 
+## Known problems
+
+If you get an error that contains »There is an incompatible JNA native library
+installed on this system«, uninstalling your system's libjna might help. Of
+course you can't do this if something depends on a system-wide installation of
+libjna (as opposed to an installation in your local Maven repo).
+
+
 ## Copyright and License
 
 The MIT License (MIT)

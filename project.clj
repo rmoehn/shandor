@@ -14,7 +14,7 @@
                  [org.clojure/core.logic "0.8.10"]
                  [prismatic/plumbing "0.5.0"]]
   :profiles {:dev {:dependencies [[org.clojure/tools.namespace "0.2.7"]]
-                   :source-paths ["dev"]}
+                   :source-paths ["dev" "test/clj"]}
              :uberjar {:main shandor.core
                        :aot :all}}
 

@@ -18,6 +18,19 @@
       `(if-let ~t ~e (cond-let ~@cs))
       `(if ~t ~e (cond-let ~@cs)))))
 
+
+;;;; Generally helpful functions
+
+(defn- assoc-nc [a-map & kvs]
+  (letfn [(assoc-nc-one [m [k v]]
+            (if (and (contains? m k) (not= v (m k)))
+              (throw (IllegalArgumentException.
+                       (str "Won't assoc " k " with " v ", because map already"
+                            " maps that key to a different value.")))
+              (assoc m k v)))]
+    (reduce assoc-nc-one a-map (partition 2 kvs))))
+
+
 ;;;; More Clojure-y wrappers for notmuch functions
 
 (def mode {:read-only 0
@@ -78,14 +91,17 @@
 
 (defn tag->map [t]
   (cond-let
-    [[_ cmd date] (re-matches #"(REM|EXP)_(.*)" t)]
+    [[_ cmd date] (re-matches #"(REM|EXP|JDY)_(.*)" t)]
     [(keyword (str/lower-case cmd)) (jt/local-date date)]
 
     [[_ cnt unit] (re-matches #"(\d+)(\w)" t)]
     [:ttl ((period-constr unit) (read-string cnt))]
 
-    (= "deleted" t)
-    [:deleted :deleted]
+    [[_ cnt unit] (re-matches #"j(\d+)(\w)" t)]
+    [:ttj ((period-constr unit) (read-string cnt))]
+
+    (contains? #{"deleted" "judge"} t)
+    [(keyword t) (keyword t)]
 
     :else
     [t t]))
@@ -95,46 +111,73 @@
 
 (defn map-entry->tag [t]
   (case (key t)
-    (:rem :exp) (str (-> t key name str/upper-case) "_" (jt/print (val t)))
-    :deleted "deleted"
+    (:rem :exp :jdy) (str (-> t key name str/upper-case) "_" (jt/print (val t)))
+    (:deleted :judge) (name (key t))
     nil))
 
 (defn map->tags [ts]
   (filter some? (map map-entry->tag ts)))
 
-;;;; Rules for generating new tags map from tags map
+
+;;;; Rules for what to do with a message according to its tags
 
 (defn new-tags-map [today tags]
-  (cond
-    (and (contains? tags :deleted) (not (contains? tags :rem)))
-    {:rem (jt/plus today (jt/weeks 2))}
+  (cond-> {}
+    (and (not (contains? tags :rem)) (contains? tags :deleted))
+    (assoc-nc :rem (jt/plus today (jt/weeks 2)))
 
-    (and (contains? tags :rem) (jt/before? (tags :rem) today))
-    :remove
+    (and (not (contains? tags :exp)) (contains? tags :ttl))
+    (assoc-nc :exp (jt/plus today (tags :ttl)))
 
-    (and (contains? tags :ttl) (not (contains? tags :exp)))
-    {:exp (jt/plus today (tags :ttl))}
+    (and (contains? tags :exp)
+         (not (contains? tags :rem))
+         (jt/before? (tags :exp) today))
+    (assoc-nc :deleted :deleted
+              :rem (jt/plus today (jt/weeks 2)))
 
-    (and (not (contains? tags :deleted))
-         (contains? tags :exp) (jt/before? (tags :exp) today))
-    {:deleted :deleted
-     :rem (jt/plus today (jt/weeks 2))}
+    (and (not (contains? tags :jdy)) (contains? tags :ttj))
+    (assoc-nc :jdy (jt/plus today (tags :ttj)))
 
-    :else
-    {}))
+    (and (contains? tags :jdy)
+         (not (contains? tags :judge))
+         (jt/before? (tags :jdy) today))
+    (assoc-nc :judge :judge)))
+
+(defn action
+  "
+
+  The action is either :add-tags or :remove."
+  [today tags]
+  (if (and (contains? tags :rem) (jt/before? (tags :rem) today))
+    [:remove]
+    (let [ntm (new-tags-map today tags)]
+      (if (seq ntm)
+        [:add-tags ntm]
+        [:nop]))))
+
 
 ;;;; Going through all messages and doing what needs to be done
 
 (defn treat-message [msg]
   (let [tags (tags->map (get-tags msg))
-        nt (new-tags-map (jt/local-date) tags)]
-    (when (or (keyword? nt) (seq nt))
+        [the-action act-args] (action (jt/local-date) tags)]
+    (when (contains? #{:remove :add-tags} the-action)
       (println ">>>" (nm.msg/get-header msg "Subject"))
       (println tags)
-      (println nt))
-    (if (= nt :remove)
+      (println act-args))
+    (case the-action
+      :remove
       (remove-message! msg)
-      (add-tags! msg (map->tags nt)))))
+
+      ; I couldn't find out exactly, but I'm pretty sure that
+      ; notmuch_message_add_tags is idempotent (in the procedural sense).
+      ; Therefore, we don't have to care whether a message already has a tag or
+      ; not.
+      :add-tags
+      (add-tags! msg (map->tags act-args))
+
+      :nop
+      nil)))
 
 (defn treat-messages [query db]
   (let [query-obj (nm.query/create db query)
@@ -150,7 +193,11 @@
 
 ;;;; Entry point
 
-(defn -main [& [db-path]]
+(defn -main
+  "
+
+  Note that you should run notmuch new after every execution of this procedure."
+  [& [db-path]]
   (let [db-pointer (PointerByReference.)
         _ (nm.db/open db-path (mode :read-write) db-pointer)
         db (.getValue db-pointer)]

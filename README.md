@@ -7,23 +7,31 @@ Gives emails a shelf life and deletes them when they're expired.
 
 ## Summary
 
-My email archive has three main categories of emails:
+My emails fall into several categories:
 
  - Emails that I read once and won't need ever again.
 
  - Emails that are only relevant for a short period of time (up to a year) and
    not needed after that.
 
- - Emails that have value (to me) for a long time (more than a year).
+ - Emails that have value (to me) for a long time. For those I usually want to
+   decide after some time whether they're still valuable.
 
-Shandor takes charge of the first two categories by actually deleting those
-emails at the right time.
+Shandor helps me by deleting the emails from the first two categories at the
+right time. It also reminds me when it's time to judge those long-term emails
+again.
 
-For that I tag my emails using [notmuch](http://notmuchmail.org). Every day
-Shandor looks into the notmuch database and figures out what to do with each
-email based on its tags. Emails with the tag `deleted` are actually deleted after
-two weeks. Emails with the tag `1w` or `6m` are going to be tagged as `deleted`
-after one week or six months, respectively.
+For that I tag my emails using [notmuch](http://notmuchmail.org). Every time I
+call Shandor, it looks into the notmuch database and figures out what to do with
+each email based on its tags. Emails with the tag `deleted` are actually deleted
+after two weeks. Emails with the tag `1w` or `6m` are going to be tagged as
+`deleted` after one week or six months, respectively. Emails with the tag `j1y`
+or `j5y` will be tagged `judge` after one or five years, respectively.
+
+I also have categories whose emails should have a certain lifespan. For example,
+emails from Amazon can be deleted after three years. Since I don't want to put
+the tag `3y` on every Amazon email, I can specify a premap that maps any tag to
+a Shandor tag.
 
 
 ## Usage
@@ -43,7 +51,9 @@ $ lein uberjar
 Then, **every day**, run:
 
 ```shell
-$ java -jar target/shandor-<current version>.jar <path to directory with notmuch DB>
+$ java -jar target/shandor-<current version>.jar \
+    <path to directory with notmuch DB>
+    [<path to the premap>]
 $ notmuch new
 ```
 
@@ -59,9 +69,31 @@ Shandor will do the following:
 
  - Emails whose **removal date** lies in the **past**: actually delete them.
 
+ - Emails with a **time-to-judge**, i.e. tag `jNd`, `jNw`, `jNm` or `jNy`, where
+   `N` is a natural number: mark them for judgement in `N` days, weeks, months
+   or years.
+
+ - Emails whose **judgement date has passed**: tag them with `judge`.
+
 Right now, Shandor only deletes the **email files** from disk and not the
 corresponding entries in the **database**. `notmuch new` takes care of that.
 
+The **premap** is an EDN file with a map from general tags to Shandor tags, like
+this:
+
+```clojure
+{"amazon" "3y"
+ "x-newsletter" "j5m"}
+```
+
+Providing it replaces the tags on the left side with the tags on the right side
+in Shandor's eyes. In other words, Shandor's compost algorithm **won't see**
+`amazon` or `x-newsletter` on an email, but `3y` or `j5m` respectively.
+
+Shandor **logs** extensively, so that you can reconstruct what happened to your
+emails. If you don't want logs, redirect Shandor's STDOUT to `/dev/null`. I
+recommend appending it to a log file, though. And I recommend using `logrotate`
+on that file.
 
 ## Comments
 
@@ -94,7 +126,7 @@ libjna (as opposed to an installation in your local Maven repo).
 
 The MIT License (MIT)
 
-Copyright (c) 2015 Richard Möhn
+Copyright (c) 2016 Richard Möhn
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal

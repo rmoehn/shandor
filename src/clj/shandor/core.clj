@@ -98,13 +98,15 @@
       (str hdr-k ": " hdr-v \newline))))
 
 (defn- format-msg [msg]
-  (str/join (map #(get-and-format-header msg %)
-                 ["Message-ID" "Date" "From" "To" "Cc" "Bcc" "Subject"])))
+  (str
+    (str/join (map #(get-and-format-header msg %)
+                   ["Message-ID" "Date" "From" "To" "Cc" "Bcc" "Subject"]))
+    "X-Notmuch-Tags: " (get-tags msg) \newline))
 
 (defn log-msg [msg [action _ :as act-all]]
   (when-not (= :nop action)
     (print (str (format-msg msg)
-                "X-Action: " act-all \newline
+                "X-Shandor-Action: " act-all \newline
                 \newline))))
 
 

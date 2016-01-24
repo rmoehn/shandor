@@ -82,6 +82,32 @@
   (doseq [fnm (get-filenames msg)]
     (io/delete-file (io/file fnm))))
 
+
+;;;; Logging
+
+(defn log-begin []
+  (print (str "X-Shandor-Begin: " (jt/local-date-time) \newline \newline)))
+
+(defn log-end []
+  (print (str "X-Shandor-End: " (jt/local-date-time) \newline \newline)))
+
+(defn- get-and-format-header [msg hdr-k]
+  (let [hdr-v (nm.msg/get-header msg hdr-k)]
+    (if (empty? hdr-v)
+      ""
+      (str hdr-k ": " hdr-v \newline))))
+
+(defn- format-msg [msg]
+  (str/join (map #(get-and-format-header msg %)
+                 ["Message-ID" "Date" "From" "To" "Cc" "Bcc" "Subject"])))
+
+(defn log-msg [msg [action _ :as act-all]]
+  (when-not (= :nop action)
+    (print (str (format-msg msg)
+                "X-Action: " act-all \newline
+                \newline))))
+
+
 ;;;; Mapping back and forth between tags and maps
 
 (def ^:private period-constr {"d" jt/days
@@ -160,11 +186,8 @@
 
 (defn treat-message [msg]
   (let [tags (tags->map (get-tags msg))
-        [the-action act-args] (action (jt/local-date) tags)]
-    (when (contains? #{:remove :add-tags} the-action)
-      (println ">>>" (nm.msg/get-header msg "Subject"))
-      (println tags)
-      (println act-args))
+        [the-action act-args :as act-all] (action (jt/local-date) tags)]
+    (log-msg msg act-all)
     (case the-action
       :remove
       (remove-message! msg)
@@ -198,9 +221,11 @@
 
   Note that you should run notmuch new after every execution of this procedure."
   [& [db-path]]
+  (assert db-path "You have to provide the path to the notmuch database.")
+  (log-begin)
   (let [db-pointer (PointerByReference.)
         _ (nm.db/open db-path (mode :read-write) db-pointer)
         db (.getValue db-pointer)]
     (treat-messages "*" db)
-    (nm.db/close (.getValue db-pointer))
-    (println "Finished.")))
+    (log-end) ; Here, because I don't want errors closing the DB to interfere.
+    (nm.db/close (.getValue db-pointer))))

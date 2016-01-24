@@ -10,6 +10,7 @@
 
 (comment
 
+  (refresh)
   (shandor.core/-main "/home/erle/mail")
 
   (refresh)

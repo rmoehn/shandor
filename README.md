@@ -99,9 +99,9 @@ on that file.
 
 Based on the same thoughts as [Moirai](https://github.com/rmoehn/moirai).
 
-Right now the code is pretty horrible and there are no tests. And I'm not sure
-whether one day it will delete all my emails. Good that I have backups. Anyway,
-I think shelf lives are pretty awesome.
+Right now the code is quite horrible and there are almost no tests. So I'm not
+sure whether one day it will delete all my emails. Good that I have backups and
+a log. Anyway, I think shelf lives are awesome.
 
 See also [The Web of Alexandria](http://worrydream.com/TheWebOfAlexandria/) and
 [The Web of Alexandria

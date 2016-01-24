@@ -26,6 +26,18 @@
   (is (thrown? IllegalArgumentException (@#'nut/assoc-nc {:a 4} :b 5 :b 6))))
 
 
+(deftest tags->map
+  (are [tags premap expected] (= expected (nut/tags->map premap tags))
+       [] {} {}
+       ["bla"] {} {"bla" "bla"}
+       ["bla"] {"bla" "1w"} {:ttl (jt/weeks 1)}
+       ["deleted"] {} {:deleted :deleted}
+       ["bla" "j1w"] {"bla" "j1w"} {:ttj (jt/weeks 1)}
+
+       ["bla" "j1w" "JDY_2015-03-28"] {"bla" "j1w"}
+       {:ttj (jt/weeks 1) :jdy (jt/local-date "2015-03-28")}))
+
+
 (deftest new-tag-map
   (are [tags-in expected] (= expected (nut/new-tags-map
                                         (jt/local-date "2015-06-12")

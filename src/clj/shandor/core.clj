@@ -1,5 +1,6 @@
 (ns shandor.core
-  (:require [clojure.java.io :as io]
+  (:require [clojure.edn :as edn]
+            [clojure.java.io :as io]
             [clojure.string :as str]
             [joda-time :as jt]
             [plumbing.fnk.schema :refer [assert-iae]]
@@ -85,8 +86,11 @@
 
 ;;;; Logging
 
-(defn log-begin []
-  (print (str "X-Shandor-Begin: " (jt/local-date-time) \newline \newline)))
+(defn log-begin [premap]
+  (print (str "X-Shandor-Begin: " (jt/local-date-time) \newline
+              (if (seq premap)
+                (str "X-Shandor-Premap: " premap \newline)
+                ""))))
 
 (defn log-end []
   (print (str "X-Shandor-End: " (jt/local-date-time) \newline \newline)))
@@ -134,8 +138,9 @@
     :else
     [t t]))
 
-(defn tags->map [tags]
- (into {} (map tag->map (set tags))))
+(defn tags->map [premap tags]
+ (into {} (map tag->map
+               (map #(get premap % %) tags))))
 
 (defn map-entry->tag [t]
   (case (key t)
@@ -186,8 +191,8 @@
 
 ;;;; Going through all messages and doing what needs to be done
 
-(defn treat-message [msg]
-  (let [tags (tags->map (get-tags msg))
+(defn treat-message [premap msg]
+  (let [tags (tags->map premap (get-tags msg))
         [the-action act-args :as act-all] (action (jt/local-date) tags)]
     (log-msg msg act-all)
     (case the-action
@@ -204,13 +209,13 @@
       :nop
       nil)))
 
-(defn treat-messages [query db]
+(defn treat-messages [premap query db]
   (let [query-obj (nm.query/create db query)
         msgs-obj (nm.query/search-messages query-obj)]
     (loop []
       (when (nm.msgs/valid msgs-obj)
         (let [msg (nm.msgs/get msgs-obj)]
-          (treat-message msg))
+          (treat-message premap msg))
         (nm.msgs/move-to-next msgs-obj)
         (recur)))
     (nm.query/destroy query-obj))) ; Also destroys msgs-obj.
@@ -222,12 +227,15 @@
   "
 
   Note that you should run notmuch new after every execution of this procedure."
-  [& [db-path]]
+  [& [db-path premap-fnm]]
   (assert db-path "You have to provide the path to the notmuch database.")
-  (log-begin)
-  (let [db-pointer (PointerByReference.)
+  (let [premap (if premap-fnm
+                 (edn/read-string (slurp premap-fnm))
+                 {})
+        db-pointer (PointerByReference.)
         _ (nm.db/open db-path (mode :read-write) db-pointer)
         db (.getValue db-pointer)]
-    (treat-messages "*" db)
+    (log-begin premap)
+    (treat-messages premap "*" db)
     (log-end) ; Here, because I don't want errors closing the DB to interfere.
     (nm.db/close (.getValue db-pointer))))

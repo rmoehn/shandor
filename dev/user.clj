@@ -11,7 +11,7 @@
 (comment
 
   (refresh)
-  (shandor.core/-main "/home/erle/mail")
+  (shandor.core/-main "/home/erle/mail" "/home/erle/mail/shandor-premap.edn"  )
 
   (refresh)
   (run-tests 'shandor.t-core)

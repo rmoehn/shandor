@@ -87,13 +87,13 @@
 ;;;; Logging
 
 (defn log-begin [premap]
-  (print (str "X-Shandor-Begin: " (jt/local-date-time) \newline
-              (if (seq premap)
-                (str "X-Shandor-Premap: " premap \newline)
-                ""))))
+  (println (str "X-Shandor-Begin: " (jt/local-date-time) \newline
+                (if (seq premap)
+                  (str "X-Shandor-Premap: " premap \newline)
+                  ""))))
 
 (defn log-end []
-  (print (str "X-Shandor-End: " (jt/local-date-time) \newline \newline)))
+  (println (str "X-Shandor-End: " (jt/local-date-time) \newline)))
 
 (defn- get-and-format-header [msg hdr-k]
   (let [hdr-v (nm.msg/get-header msg hdr-k)]
@@ -109,9 +109,8 @@
 
 (defn log-msg [msg [action _ :as act-all]]
   (when-not (= :nop action)
-    (print (str (format-msg msg)
-                "X-Shandor-Action: " act-all \newline
-                \newline))))
+    (println (str (format-msg msg)
+                  "X-Shandor-Action: " act-all \newline))))
 
 
 ;;;; Mapping back and forth between tags and maps

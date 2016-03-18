@@ -86,31 +86,35 @@
 
 ;;;; Logging
 
+(defn- header [hdr-k hdr-v]
+  (str hdr-k ": " hdr-v \newline))
+
 (defn log-begin [premap]
-  (println (str "X-Shandor-Begin: " (jt/local-date-time) \newline
+  (println (str (header "X-Shandor-Begin" (jt/local-date-time))
                 (if (seq premap)
-                  (str "X-Shandor-Premap: " premap \newline)
+                  (header "X-Shandor-Premap" premap)
                   ""))))
 
 (defn log-end []
-  (println (str "X-Shandor-End: " (jt/local-date-time) \newline)))
+  (println (header "X-Shandor-End" (jt/local-date-time))))
 
 (defn- get-and-format-header [msg hdr-k]
   (let [hdr-v (nm.msg/get-header msg hdr-k)]
     (if (empty? hdr-v)
       ""
-      (str hdr-k ": " hdr-v \newline))))
+      (header hdr-k hdr-v))))
 
 (defn- format-msg [msg]
   (str
+    (header "X-Local-Paths" (get-filenames msg))
     (str/join (map #(get-and-format-header msg %)
                    ["Message-ID" "Date" "From" "To" "Cc" "Bcc" "Subject"]))
-    "X-Notmuch-Tags: " (get-tags msg) \newline))
+    (header "X-Notmuch-Tags" (get-tags msg))))
 
 (defn log-msg [msg [action _ :as act-all]]
   (when-not (= :nop action)
     (println (str (format-msg msg)
-                  "X-Shandor-Action: " act-all \newline))))
+                  (header "X-Shandor-Action" act-all)))))
 
 
 ;;;; Mapping back and forth between tags and maps

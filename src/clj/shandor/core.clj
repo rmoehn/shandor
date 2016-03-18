@@ -218,7 +218,11 @@
     (loop []
       (when (nm.msgs/valid msgs-obj)
         (let [msg (nm.msgs/get msgs-obj)]
-          (treat-message premap msg))
+          (try
+            (treat-message premap msg)
+            (catch Exception e
+              (log-msg msg [:errored])
+              (throw e))))
         (nm.msgs/move-to-next msgs-obj)
         (recur)))
     (nm.query/destroy query-obj))) ; Also destroys msgs-obj.

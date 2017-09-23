@@ -122,6 +122,15 @@ course you can't do this if something depends on a system-wide installation of
 libjna (as opposed to an installation in your local Maven repo).
 
 
+## Changelog
+
+- 2017-09-23 235b204a3b: Update to support libnotmuch 5. Won't work with
+  versions before that. Note: As far as I know, nobody is using Shandor. If
+  somebody was using it, I wouldn't be so reckless as to make breaking changes.
+  If you are using it without me knowing, please let me know, so that I won't
+  break your setup anymore.
+
+
 ## Copyright and License
 
 See `LICENSE.txt` in this repo.

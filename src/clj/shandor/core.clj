@@ -214,7 +214,9 @@
 
 (defn treat-messages [premap query db]
   (let [query-obj (nm.query/create db query)
-        msgs-obj (nm.query/search-messages query-obj)]
+        msgs-pointer (PointerByReference.)
+        _ (nm.query/search-messages query-obj msgs-pointer)
+        msgs-obj (.getValue msgs-pointer)]
     (loop []
       (when (nm.msgs/valid msgs-obj)
         (let [msg (nm.msgs/get msgs-obj)]

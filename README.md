@@ -95,6 +95,25 @@ emails. If you don't want logs, redirect Shandor's STDOUT to `/dev/null`. I
 recommend appending it to a log file, though. And I recommend using `logrotate`
 on that file.
 
+
+## A note on judging
+
+Shandor doesn't remove tags. When the judgement date has passed, the emails to
+be judged will have tags like `j1y JDY_1997-08-29 judge`. When you judge those
+emails, you probably want to **remove the previous tags** and add new ones. For
+example, the email that had those tags listed above should now have only the tag
+`deleted`, or `j5y`. I don't want to take the time to build that into Shandor,
+so here's the process I use (independent of email client):
+
+```shell
+# From messages tagged "judge", remove tags except "judge".
+$ notmuch tag --remove-all +judge -- tag:judge
+# Now do your judging.
+# Remove tag "judge" from the messages just judged.
+$ notmuch tag -judge -- tag:judge
+```
+
+
 ## Comments
 
 Based on the same thoughts as [Moirai](https://github.com/rmoehn/moirai).
